@@ -1,0 +1,193 @@
+var clientes = [];
+var juegos = [];
+
+// Cargar datos de clientes y juegos desde el almacenamiento local al iniciar la aplicación
+if (localStorage.getItem('clientes')) {
+    clientes = JSON.parse(localStorage.getItem('clientes'));
+    mostrarClientesEnSelector();
+    mostrarListadoDeClientes();
+}
+
+if (localStorage.getItem('juegos')) {
+    juegos = JSON.parse(localStorage.getItem('juegos'));
+    mostrarListadoDeJuegos();
+    mostrarJuegosEnSelector(); // Mostrar juegos en el selector al cargar la página
+}
+
+function guardarClientesEnLocalStorage() {
+    localStorage.setItem('clientes', JSON.stringify(clientes));
+}
+
+function guardarJuegosEnLocalStorage() {
+    localStorage.setItem('juegos', JSON.stringify(juegos));
+}
+
+function registrarCliente() {
+    var nombre = document.getElementById('nombre').value;
+    var email = document.getElementById('email').value;
+
+    if (nombre.trim() === '' || email.trim() === '') {
+        alert('Por favor, complete todos los campos.');
+        return;
+    }
+
+    var nuevoCliente = {
+        nombre: nombre,
+        email: email,
+        saldoMegaPuntos: 0
+    };
+
+    clientes.push(nuevoCliente);
+    guardarClientesEnLocalStorage();
+
+    document.getElementById('nombre').value = '';
+    document.getElementById('email').value = '';
+
+    mostrarClientesEnSelector();
+    mostrarListadoDeClientes();
+}
+
+function mostrarClientesEnSelector() {
+    var select = document.getElementById('clienteVenta');
+    select.innerHTML = '';
+    for (var i = 0; i < clientes.length; i++) {
+        var option = document.createElement('option');
+        option.value = clientes[i].nombre;
+        option.text = clientes[i].nombre;
+        select.appendChild(option);
+    }
+}
+
+function agregarPuntosPorVenta() {
+    var cliente = document.getElementById('clienteVenta').value;
+    var juego = document.getElementById('juegoVenta').value;
+    var puntosVenta = parseInt(document.getElementById('puntosVenta').value);
+
+    if (isNaN(puntosVenta)) {
+        alert('Ingrese una cantidad válida de puntos.');
+        return;
+    }
+
+    var clienteEncontrado = clientes.find(function (c) {
+        return c.nombre === cliente;
+    });
+
+    var juegoEncontrado = juegos.find(function (j) {
+        return j.nombre === juego;
+    });
+
+    if (clienteEncontrado && juegoEncontrado) {
+        clienteEncontrado.saldoMegaPuntos += juegoEncontrado.puntos * puntosVenta;
+        guardarClientesEnLocalStorage();
+    } else {
+        alert('Cliente o juego no encontrado');
+    }
+
+    mostrarListadoDeClientes();
+}
+
+function mostrarListadoDeClientes() {
+    var listadoHTML = '<ul>';
+    for (var i = 0; i < clientes.length; i++) {
+        listadoHTML += '<li>' + clientes[i].nombre + ' - Saldo de Mega Puntos: ' + clientes[i].saldoMegaPuntos +
+            ' <button onclick="modificarCliente(' + i + ')">Modificar</button>' +
+            ' <button onclick="eliminarCliente(' + i + ')">Eliminar</button></li>';
+    }
+    listadoHTML += '</ul>';
+    document.getElementById('listado-clientes').innerHTML = listadoHTML;
+}
+
+function modificarCliente(index) {
+    var nuevoNombre = prompt('Ingrese el nuevo nombre del cliente');
+    if (nuevoNombre) {
+        clientes[index].nombre = nuevoNombre;
+        guardarClientesEnLocalStorage();
+        mostrarClientesEnSelector();
+        mostrarListadoDeClientes();
+    }
+}
+
+function eliminarCliente(index) {
+    if (confirm('¿Está seguro de que desea eliminar este cliente?')) {
+        clientes.splice(index, 1);
+        guardarClientesEnLocalStorage();
+        mostrarClientesEnSelector();
+        mostrarListadoDeClientes();
+    }
+}
+
+function agregarJuego() {
+    var nombreJuego = document.getElementById('nombreJuego').value;
+    var puntosJuego = parseInt(document.getElementById('puntosJuego').value);
+
+    if (nombreJuego.trim() === '' || isNaN(puntosJuego)) {
+        alert('Por favor, complete todos los campos y asegúrese de ingresar puntos válidos.');
+        return;
+    }
+
+    var nuevoJuego = {
+        nombre: nombreJuego,
+        puntos: puntosJuego
+    };
+
+    juegos.push(nuevoJuego);
+    guardarJuegosEnLocalStorage();
+
+    document.getElementById('nombreJuego').value = '';
+    document.getElementById('puntosJuego').value = '';
+
+    mostrarListadoDeJuegos();
+    mostrarJuegosEnSelector(); // Mostrar juegos en el selector después de agregar uno nuevo
+}
+
+function mostrarListadoDeJuegos() {
+    var listadoHTML = '<ul>';
+    for (var i = 0; i < juegos.length; i++) {
+        listadoHTML += '<li>' + juegos[i].nombre + ' - Puntos: ' + juegos[i].puntos +
+            ' <button onclick="modificarJuego(' + i + ')">Modificar</button>' +
+            ' <button onclick="eliminarJuego(' + i + ')">Eliminar</button></li>';
+    }
+    listadoHTML += '</ul>';
+    document.getElementById('listado-juegos').innerHTML = listadoHTML;
+}
+
+function modificarJuego(index) {
+    var nuevoNombre = prompt('Ingrese el nuevo nombre del juego');
+    if (nuevoNombre) {
+        juegos[index].nombre = nuevoNombre;
+        guardarJuegosEnLocalStorage();
+        mostrarJuegosEnSelector();
+        mostrarListadoDeJuegos();
+    }
+}
+
+function eliminarJuego(index) {
+    if (confirm('¿Está seguro de que desea eliminar este juego?')) {
+        juegos.splice(index, 1);
+        guardarJuegosEnLocalStorage();
+        mostrarJuegosEnSelector();
+        mostrarListadoDeJuegos();
+    }
+}
+
+function mostrarJuegosEnSelector() {
+    var select = document.getElementById('juegoVenta');
+    select.innerHTML = '';
+    for (var i = 0; i < juegos.length; i++) {
+        var option = document.createElement('option');
+        option.value = juegos[i].nombre;
+        option.text = juegos[i].nombre;
+        select.appendChild(option);
+    }
+    // Actualizar el campo de puntos con los puntos del juego seleccionado
+    select.addEventListener('change', function () {
+        var juegoSeleccionado = juegos.find(function (j) {
+            return j.nombre === select.value;
+        });
+        if (juegoSeleccionado) {
+            document.getElementById('puntosVenta').value = juegoSeleccionado.puntos;
+        } else {
+            document.getElementById('puntosVenta').value = '';
+        }
+    });
+}
